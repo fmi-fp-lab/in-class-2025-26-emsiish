@@ -20,6 +20,7 @@
 -- }}}
 
 module Intro where
+import Text.XHtml (base)
 
 ---------------------------------
 
@@ -186,7 +187,9 @@ fact n =
 -- 34
 
 fib :: Integer -> Integer
-fib = undefined
+fib 0 = 1
+fib 1 = 1
+fib n = fib (n - 1) + fib (n - 2)
 
 -- use the following "mathematical definition" to implement addition on natural numbers:
 -- myPlus x y = { y                        | x == 0    }
@@ -203,7 +206,7 @@ fib = undefined
 -- 42
 
 myPlus :: Integer -> Integer -> Integer
-myPlus n m = undefined
+myPlus n m = if n == 0 then m else succ (myPlus (pred n) m)
 
 -- same as above, implement multiplication on natural numbers recursively, using addition instead of succ
 -- EXAMPLES
@@ -216,7 +219,10 @@ myPlus n m = undefined
 -- >>> myMult 1 42
 -- 42
 myMult :: Integer -> Integer -> Integer
-myMult n m = undefined
+myMult n m =
+  if n == 0 || m == 0
+    then 0
+    else myPlus n (myMult n (m - 1))
 
 -- Implement "fast exponentiation".
 -- This uses the following property:
@@ -232,7 +238,10 @@ myMult n m = undefined
 -- >>> fastPow 2 6
 -- 64
 fastPow :: Integer -> Integer -> Integer
-fastPow = undefined
+fastPow x n
+  | n == 0 = 1
+  | even n = fastPow (x * x) (n `div` 2)
+  | otherwise = x * fastPow x (n - 1)
 
 -- Define two mutually recursive functions which check whether a number is even or odd.
 -- Assume that the input is non-negative.
@@ -251,10 +260,10 @@ fastPow = undefined
 -- True
 
 isEven :: Integer -> Bool
-isEven x = undefined
+isEven x = (x == 0) || ((x /= 1) && isOdd (x - 1))
 
 isOdd :: Integer -> Bool
-isOdd x = undefined
+isOdd x = (x == 1) || ((x /= 0) && isEven (x - 1))
 
 -- Define a function to check whether a given Integer is a prime number.
 -- Assume that the input is non-negative.
@@ -304,6 +313,11 @@ isOdd x = undefined
 -- True
 
 isPrime :: Integer -> Bool
-isPrime n = undefined
+isPrime n = not (helper 2 (n - 1))
+  where
+    helper a b
+      | a > b = False
+      | a `rem` n == 0 = True
+      | otherwise = helper (succ a) b
 
 -- vim: foldmethod=marker:

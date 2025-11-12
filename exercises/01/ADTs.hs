@@ -10,7 +10,6 @@
 {-# OPTIONS_GHC -fwarn-unused-matches #-}
 
 module ADTs where
-
 -- TODO: talk about
 -- - join + write on discord
 -- - solutions (linked in discord)
@@ -46,7 +45,10 @@ data RPS = Rock | Paper | Scissors
 -- >>> beats Paper Rock
 -- True
 beats :: RPS -> RPS -> Bool
-beats = undefined
+beats Paper Rock = True
+beats Rock Scissors = True
+beats Scissors Paper = True
+beats _ _ = False
 
 -- TASK:
 -- Define the "next" throw you can do in the "usual" ordering of RPS
@@ -55,7 +57,9 @@ beats = undefined
 -- >>> next Rock
 -- Paper
 next :: RPS -> RPS
-next = undefined
+next Rock = Paper
+next Paper = Scissors
+next Scissors = Rock
 
 -- TASK:
 -- Define what it means for two RPS values to be equal
@@ -66,7 +70,10 @@ next = undefined
 -- >>> eqRPS Rock Paper
 -- False
 eqRPS :: RPS -> RPS -> Bool
-eqRPS = undefined
+eqRPS Rock Rock = True
+eqRPS Scissors Scissors = True
+eqRPS Paper Paper = True
+eqRPS _ _ = False
 
 -- TASK:
 -- Define a shorter version of beats using next and eqRPS
@@ -77,7 +84,7 @@ eqRPS = undefined
 -- True
 
 beats' :: RPS -> RPS -> Bool
-beats' = undefined
+beats' x y = next x `eqRPS` y
 
 ------------
 -- Points --
@@ -164,7 +171,8 @@ addNat (Succ n1) n2 = Succ (addNat n1 n2)
 -- Succ (Succ (Succ (Succ (Succ (Succ Zero)))))
 
 multNat :: Nat -> Nat -> Nat
-multNat = undefined
+multNat Zero _ = Zero
+multNat (Succ n1) n2 = n2 `addNat` (n1 `multNat` n2)
 
 -- TASK:
 -- Compare two Nats, returning an Ordering
@@ -173,7 +181,10 @@ multNat = undefined
 -- GT
 
 compareNat :: Nat -> Nat -> Ordering
-compareNat = undefined
+compareNat Zero Zero = EQ
+compareNat Zero (Succ _) = LT
+compareNat (Succ _) Zero = GT
+compareNat (Succ n1) (Succ n2) = compareNat n1 n2
 
 -- TASK:
 -- Return the maximum of two Nats
@@ -182,7 +193,9 @@ compareNat = undefined
 -- Succ (Succ Zero)
 
 maxNat :: Nat -> Nat -> Nat
-maxNat = undefined
+maxNat Zero n2 = n2
+maxNat n1 Zero = n1
+maxNat (Succ n1) (Succ n2) = Succ (maxNat n1 n2)
 
 -----------------
 -- Expressions --
@@ -209,7 +222,9 @@ infixr 8 `Mult`
 -- 12
 
 eval :: Expr -> Integer
-eval = undefined
+eval (Val n) = n
+eval (Plus n1 n2) = eval n1 + eval n2
+eval (Mult n1 n2) = eval n1 * eval n2
 
 -- TASK:
 -- Extend the Expr language with If expressions
@@ -220,36 +235,70 @@ eval = undefined
 ------------
 
 -- Data type for Ranks in a card game
-data Rank
+data Rank = Seven | Eight | Nine | Ten | Jack | Queen | King | Ace
   deriving (Show)
 
 -- Data type for Suits in a card game
-data Suit
+data Suit = Clubs | Diamonds | Hearts | Spades
   deriving (Show)
 
 -- TASK:
 -- Check if two suits are equal
 suitEquals :: Suit -> Suit -> Bool
-suitEquals = undefined
+suitEquals Clubs Clubs = True
+suitEquals Diamonds Diamonds = True
+suitEquals Hearts Hearts = True
+suitEquals Spades Spades = True
+suitEquals _ _ = False
 
 -- Record syntax for representing a Card
-data Card
+data Card = MkCard {rank :: Rank, suit :: Suit}
   deriving (Show)
 
 -- Data type for Contracts in the Belote game
-data Contract
+data Contract = Trumps Suit | NoTrump | AllTrumps
   deriving (Show)
 
 -- TASK:
 -- Check if a card is of a trump suit based on a given contract
 isTrump :: Contract -> Card -> Bool
-isTrump = undefined
+isTrump (Trumps trumpSuit) (MkCard _rank cardSuit) = suitEquals trumpSuit cardSuit
+isTrump AllTrumps _ = True
+isTrump NoTrump _ = False
 
 -- TASK:
 -- Assign a numerical power value to a card based on the contract
 -- Ensure that higher power values represent stronger cards
 cardPower :: Contract -> Card -> Integer
-cardPower = undefined
+cardPower contract card@(MkCard rank _suit) =
+  if isTrump contract card
+    then rankTrump
+    else rankNoTrump
+  where
+    rankTrump :: Integer
+    rankTrump =
+      case rank of
+        Seven -> 0
+        Eight -> 1
+        Queen -> 2
+        King -> 3
+        Ten -> 4
+        Ace -> 5
+        Nine -> 6
+        Jack -> 7
+
+    rankNoTrump :: Integer
+    rankNoTrump =
+      case rank of
+        Seven -> 0
+        Eight -> 1
+        Nine -> 2
+        Jack -> 3
+        Queen -> 4
+        King -> 5
+        Ten -> 6
+        Ace -> 7
+
 
 -- TASK:
 -- A data type to describe the different ways two cards can relate, given a contract
@@ -267,31 +316,79 @@ cardPower = undefined
 --
 -- HINT:
 -- The intended solution has 4 constructors
-data CardRelation
+data CardRelation = FirstIsTrump | SecondIsTrump | SameSuit | DifferentSuit
   deriving (Show)
 
 -- TASK:
 -- Given a contract, calculate how two cards relate
 relateCards :: Contract -> Card -> Card -> CardRelation
-relateCards = undefined
+relateCards contract card1@(MkCard _ suit1) card2@(MkCard _ suit2) =
+  case (isTrump contract card1, isTrump contract card2) of
+    (False, False) ->
+      if suit1 `suitEquals` suit2
+        then SameSuit
+        else DifferentSuit
+    (True, False) -> FirstIsTrump
+    (False, True) -> SecondIsTrump
+    (True, True) -> SameSuit
 
 -- TASK:
 -- Given a contract and two cards, return the winning card
 -- Assume the first card is played first
 fight :: Contract -> Card -> Card -> Card
-fight = undefined
+fight contract card1 card2 =
+  case relateCards contract card1 card2 of
+    FirstIsTrump -> card1
+    SecondIsTrump -> card2
+    DifferentSuit -> card1
+    SameSuit ->
+      if cardPower contract card1 <= cardPower contract card2
+        then card2
+        else card1
 
 -- Data type for a trick (игра, разигравка, ръка, рунд), consisting of four cards
-data Trick
+data Trick = MkTrick Card Card Card Card
   deriving (Show)
 
 -- TASK:
 -- Given a contract and a Trick, determine the winning card
 -- Remember that the leftmost card was played first
 winner :: Contract -> Trick -> Card
-winner = undefined
+winner contract (MkTrick card1 card2 card3 card4) =
+  ((card1 `fight'` card2) `fight'` card3) `fight'` card4
+  where
+    fight' = fight contract
 
 -- TASK:
 -- Check if a Trick could have been played according to the rules of Belote
 isValid :: Contract -> Trick -> Bool
-isValid = undefined
+isValid contract (MkTrick card1 card2 card3 card4) = 
+  isValidCard card2 card1 &&
+  isValidCard card3 card1 &&
+  isValidCard card4 card1
+  where
+    getSuit (MkCard _ suit) = suit
+
+    isValidCard :: Card -> Card -> Bool
+    isValidCard current leading = 
+      let currSuit = getSuit current
+          leadSuit = getSuit leading
+          followsLeading = currSuit `suitEquals` leadSuit
+          mustFollowLead = isTrump contract leading
+      in followsLeading || (not followsLeading && isTrump contract current) || True
+
+-- Example
+exampleContract :: Contract
+exampleContract = Trumps Spades
+
+exampleTrick :: Trick
+exampleTrick = MkTrick exampleCard1 exampleCard2 exampleCard3 exampleCard4
+  where
+    exampleCard1, exampleCard2, exampleCard3, exampleCard4 :: Card
+    exampleCard1 = MkCard Ace Spades
+    exampleCard2 = MkCard Jack Hearts
+    exampleCard3 = MkCard King Spades
+    exampleCard4 = MkCard Seven Diamonds
+
+-- isValid exampleContract exampleTrick
+-- True
