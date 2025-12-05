@@ -65,7 +65,7 @@ import Prelude hiding (all, and, concat, drop, filter, length, map, null, produc
 -- []
 
 listFromRange :: Integer -> Integer -> [Integer]
-listFromRange = undefined
+listFromRange a b = [x | x <- [a..b]]
 
 -- TASK:
 -- Multiply all the elements of a list
@@ -76,12 +76,13 @@ listFromRange = undefined
 -- 1
 
 product :: [Integer] -> Integer
-product = undefined
+product [] = 1
+product (x : xs) = x * product xs
 
 -- TASK:
 -- Implement factorial with prod and listFromRange
 fact :: Integer -> Integer
-fact = undefined
+fact x = product (listFromRange 1 x)
 
 -- TASK:
 -- Return a list of the numbers that divide the given number.
@@ -94,7 +95,7 @@ fact = undefined
 -- [1,2,3,4,6,8,12,24]
 
 divisors :: Integer -> [Integer]
-divisors = undefined
+divisors n = [x | x <- [1..n], n `mod` x == 0]
 
 -- TASK:
 -- Implement prime number checking using listFromRange and divisors
@@ -105,7 +106,7 @@ divisors = undefined
 -- False
 
 isPrime :: Integer -> Bool
-isPrime = undefined
+isPrime n = n > 1 && divisors n == [1, n]
 
 -- TASK:
 -- Get the last element in a list.
@@ -116,7 +117,9 @@ isPrime = undefined
 -- Just 3
 
 lastMaybe :: [a] -> Maybe a
-lastMaybe = undefined
+lastMaybe [] = Nothing
+lastMaybe [x] = Just x
+lastMaybe (_ : xs) = lastMaybe xs
 
 -- TASK:
 -- Calculate the length of a list.
@@ -127,7 +130,8 @@ lastMaybe = undefined
 -- 0
 
 length :: [a] -> Integer
-length = undefined
+length [] = 0
+length (_ : xs) = 1 + length xs 
 
 -- TASK:
 -- Return the nth element from a list (we count from 0).
@@ -139,7 +143,10 @@ length = undefined
 -- Nothing
 
 ix :: Integer -> [a] -> Maybe a
-ix = undefined
+ix _ [] = Nothing
+ix n _ | n < 0 = Nothing
+ix 0 (x : _) = Just x
+ix n (_ : xs) = ix (n - 1) xs 
 
 -- TASK:
 -- "Drop" the first n elements of a list.
@@ -151,7 +158,9 @@ ix = undefined
 -- []
 
 drop :: Integer -> [a] -> [a]
-drop = undefined
+drop n xs | n <= 0 = xs
+drop _ [] = []
+drop n (_ : xs) = drop (n - 1) xs
 
 -- TASK:
 -- "Take" the first n elements of a list.
@@ -163,7 +172,9 @@ drop = undefined
 -- [1,2,3,4,5,6,7,8,9,10]
 
 take :: Integer -> [a] -> [a]
-take = undefined
+take n _ | n <= 0 = []
+take _ [] = []
+take n (x : xs) = x : take (n - 1) xs
 
 -- TASK:
 -- Append one list to another. append [1,2,3] [4,5,6] == [1,2,3,4,5,6]
@@ -179,7 +190,9 @@ take = undefined
 -- [4,5,6]
 
 append :: [a] -> [a] -> [a]
-append = undefined
+append [] ys = ys
+append xs [] = xs
+append (x : xs) ys = x : append xs ys
 
 -- TASK:
 -- Concatenate all the lists together.
@@ -192,7 +205,8 @@ append = undefined
 -- []
 
 concat :: [[a]] -> [a]
-concat = undefined
+concat [] = []
+concat (xs : xss) = append xs (concat xss)
 
 -- TASK:
 -- Reverse a list. It's fine to do this however you like.
@@ -203,7 +217,9 @@ concat = undefined
 -- []
 
 reverse :: [a] -> [a]
-reverse = undefined
+reverse [] = []
+reverse [x] = [x]
+reverse (x : xs) = append (reverse xs) [x]
 
 -- TASK:
 -- Square all the numbers in a list
@@ -212,7 +228,8 @@ reverse = undefined
 -- [1,4,9,25]
 
 squareList :: [Integer] -> [Integer]
-squareList = undefined
+squareList [] = []
+squareList (x : xs) = (x * x) : squareList xs
 
 -- TASK:
 -- Pair up the given element with each of the elements a list.
@@ -221,7 +238,8 @@ squareList = undefined
 -- [(42,69),(42,7),(42,42)]
 
 megaPair :: a -> [b] -> [(a, b)]
-megaPair = undefined
+megaPair _ [] = []
+megaPair n (x : xs) = (n, x) : megaPair n xs
 
 -- TASK:
 -- Both of those functions above have the same structure - apply a function to each element of a list.
@@ -235,7 +253,8 @@ megaPair = undefined
 -- [(3,1),(3,2),(3,3)]
 
 map :: (a -> b) -> [a] -> [b]
-map = undefined
+map _ [] = []
+map f (x : xs) = f x : map f xs
 
 -- TASK:
 -- Check if all the elements in a list are True.
@@ -248,7 +267,8 @@ map = undefined
 -- True
 
 and :: [Bool] -> Bool
-and = undefined
+and [] = True
+and (x : xs) = x && and xs
 
 -- TASK:
 -- Check if all the elements of a list satisfy a predicate
@@ -260,7 +280,7 @@ and = undefined
 -- False
 
 all :: (a -> Bool) -> [a] -> Bool
-all = undefined
+all p xs = and (map p xs)
 
 -- TASK:
 -- Implement the cartesian product of two lists.
@@ -274,7 +294,8 @@ all = undefined
 -- []
 
 cartesian :: [a] -> [b] -> [(a, b)]
-cartesian = undefined
+cartesian [] _ = []
+cartesian (x : xs) ys = append (megaPair x ys) (cartesian xs ys)
 
 -- TASK:
 -- We can generalise cartesian to work with arbitrary functions instead of just (,),
@@ -291,7 +312,8 @@ cartesian = undefined
 -- [(1,4),(1,5),(1,6),(2,4),(2,5),(2,6),(3,4),(3,5),(3,6)]
 
 lift2List :: (a -> b -> c) -> [a] -> [b] -> [c]
-lift2List = undefined
+lift2List _ [] _ = []
+lift2List f (x : xs) ys = append (map (f x) ys) (lift2List f xs ys)
 
 -- TASK:
 -- The "filtering" part of a list comprehension - leave only those elements, that satisfy the given predicate.
@@ -306,7 +328,10 @@ lift2List = undefined
 -- [2,3,5,7,11,13,17,19]
 
 filter :: (a -> Bool) -> [a] -> [a]
-filter = undefined
+filter _ [] = []
+filter p (x : xs)
+  | p x = x : filter p xs
+  | otherwise = filter p xs
 
 data Digit
   = Zero
@@ -343,7 +368,18 @@ data Digit
 -- Nothing
 
 parseDigit :: Char -> Maybe Digit
-parseDigit = undefined
+parseDigit = \case
+  '0' -> Just Zero
+  '1' -> Just One
+  '2' -> Just Two
+  '3' -> Just Three
+  '4' -> Just Four
+  '5' -> Just Five
+  '6' -> Just Six
+  '7' -> Just Seven
+  '8' -> Just Eight
+  '9' -> Just Nine
+  _ -> Nothing
 
 -- TASK:
 -- See if all the values in a list xs are Just, returning Just xs only if they are.

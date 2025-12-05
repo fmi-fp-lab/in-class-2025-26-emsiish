@@ -13,6 +13,7 @@
 module HOF where
 
 import Prelude hiding (const, curry, id, log, map, on, swap, uncurry, until, ($), (.))
+import HOF (multNat)
 
 -- TODO:
 -- - remind about github classrooms -> in-class && HW00
@@ -41,18 +42,18 @@ import Prelude hiding (const, curry, id, log, map, on, swap, uncurry, until, ($)
 -- - (.)
 
 -- TODO: implement
-data Tuple a b
+data Tuple a b = Tuple a b
   deriving (Show)
 
 sumTuple :: Tuple Int Int -> Int
-sumTuple = undefined
+sumTuple (Tuple x y) = x + y
 
 -- TODO: implement both, show C++ equivalent
 fstTuple :: Tuple a b -> a
-fstTuple = undefined
+fstTuple (Tuple a _)= a
 
 sndTuple :: Tuple a b -> b
-sndTuple = undefined
+sndTuple (Tuple _ b ) = b
 
 -- TASK:
 -- Take two arguments and return the first.
@@ -66,7 +67,7 @@ sndTuple = undefined
 -- 42
 
 const :: a -> b -> a
-const = undefined
+const a _ = a
 
 -- TASK:
 -- Compose two functions, very useful very often
@@ -78,7 +79,7 @@ const = undefined
 -- 45
 
 compose :: (b -> c) -> (a -> b) -> a -> c
-compose = undefined
+compose f g x = f (g x)
 
 -- Play around with the syntax (how many parenthesis can you stuff in here?)
 (.) :: (b -> c) -> (a -> b) -> a -> c
@@ -93,7 +94,9 @@ compose = undefined
 -- 1024
 
 iterateN :: (a -> a) -> a -> Integer -> a
-iterateN = undefined
+iterateN f x n
+  | n <= 0 = x
+  | otherwise = iterateN f (f x) (n - 1)
 
 -- TASK:
 -- Swap the two elements of a tuple
@@ -102,7 +105,7 @@ iterateN = undefined
 -- MkTuple 69 42
 
 swap :: Tuple a b -> Tuple b a
-swap = undefined
+swap (Tuple a b) = Tuple b a
 
 -- TASK:
 -- Apply a function to only the first component of a tuple
@@ -111,39 +114,39 @@ swap = undefined
 -- MkTuple 42 1337
 
 first :: (a -> b) -> Tuple a c -> Tuple b c
-first = undefined
+first f (Tuple x y) = Tuple (f x) y
 
 -- TASK:
 -- Convert a function operating on a tuple, to one that takes two arguments.
 -- Called Curry after Haskell Curry - inventor of lambda calculus.
 -- (Guess where the language gets its name from, ексди)
 
--- >>> curry (\(MkTuple x y) -> x * y) 23 3
+-- >>> curry (\(Tuple x y) -> x * y) 23 3
 -- 69
 
 curry :: (Tuple a b -> c) -> a -> b -> c
-curry = undefined
+curry h a b = h (Tuple a b)
 
 -- TASK:
 -- Convert a two argument function, to one that takes a Tuple.
 
--- >>> uncurry (\x y -> x + y) $ MkTuple 23 46
+-- >>> uncurry (\x y -> x + y) (Tuple 23 46)
 -- 69
 
 uncurry :: (a -> b -> c) -> Tuple a b -> c
-uncurry = undefined
+uncurry h (Tuple x y) = h x y
 
 -- TASK:
 -- > p `on` f
 -- Implement a combinator that allows you to "preapply" a function f on the arguments of a function p
 
--- >>> let maxOnFirst = max `on` fstTuple in maxOnFirst (MkTuple 1 20) (MkTuple 2 100000)
+-- >>> let maxOnFirst = max `on` fstTuple in maxOnFirst (Tuple 1 20) (Tuple 2 100000)
 -- 2
--- >>> let maxOnSum = max `on` sumTuple in maxOnSum (MkTuple 20 39) (MkTuple 12 34)
+-- >>> let maxOnSum = max `on` sumTuple in maxOnSum (Tuple 20 39) (Tuple 12 34)
 -- 59
 
 on :: (b -> b -> c) -> (a -> b) -> a -> a -> c
-on = undefined
+on p f x y = p (f x) (f y)
 
 -- TASK:
 -- Execute a function, until the result starts sastifying a given predicate
@@ -152,14 +155,16 @@ on = undefined
 -- 1372
 
 until :: (a -> Bool) -> (a -> a) -> a -> a
-until = undefined
+until p f x
+  | p x = x
+  | otherwise = until p f (f x)
 
 -- TASK:
 -- Apply two different functions to the two different arguments of a tuple
 -- Think about what the type should be.
 
--- mapTuple :: ???
--- mapTuple = undefined
+mapTuple :: (a -> b) -> (c -> d) -> Tuple a c -> Tuple b d
+mapTuple f g (Tuple x y) = Tuple (f x) (g y)
 
 data Nat
   = Zero
@@ -182,20 +187,21 @@ data Nat
 -- Can you implement a general enough higher-order function (called `foldNat` here), such that you can then use to
 -- implement both of `addNat` and `multNat` by passing suitable arguments? What are those arguments?
 --
--- foldNat :: ???
--- foldNat = ???
+foldNat :: r -> (r -> r) -> Nat -> r
+foldNat z _ Zero = z
+foldNat z s (Succ n) = s (foldNat z s n)
 
 -- TASK:
 -- If your function is "good enough" you should also be able to implement exponentiation using it.
 
--- expNat :: Nat -> Nat -> Nat
--- expNat = undefined
+expNat :: Nat -> Nat -> Nat
+expNat x y = foldNat (Succ Zero) (multNat x) y 
 
 -- TASK:
 -- Can you also implement the following function using your foldNat? If not, (try to) modify your function so you can.
 
--- natToInteger :: Nat -> Integer
--- natToInteger = undefined
+natToInteger :: Nat -> Integer
+natToInteger = foldNat 0 (+ 1)
 
 -- TASK:
 -- Can you also implement the following "predecessor" function using it? Yes/No, and why?
